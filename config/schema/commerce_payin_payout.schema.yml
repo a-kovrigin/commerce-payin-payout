@@ -1,0 +1,21 @@
+commerce_payment.commerce_payment_gateway.plugin.payin_payout:
+  type: commerce_payment_gateway_configuration
+  mapping:
+    api_token:
+      type: string
+      label: 'API token'
+    agent_id:
+      type: string
+      label: 'Agent ID'
+    agent_name:
+      type: string
+      label: 'Agent name'
+    order_id_prefix:
+      type: string
+      label: 'Order ID prefix'
+    customer_phone_field_name:
+      type: string
+      label: 'Customer phone field name'
+    api_logging:
+      type: string
+      label: 'Log API requests data'

@@ -1,0 +1,8 @@
+name: Commerce Payin-Payout
+type: module
+description: Provides payment gateway for Payin-Payout service.
+package: Commerce
+core_version_requirement: ^8 || ^9
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_payment
