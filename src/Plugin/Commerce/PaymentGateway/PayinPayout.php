@@ -233,24 +233,9 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
         ]);
     }
 
-    // Not proceed if request doesn't have one of necessary params.
-    $request_keys = [
-      'orderId',
-      'agentId',
-      'amount',
-      'paymentId',
-      'paymentStatus',
-      'paymentDate',
-      'outputId',
-      'phone',
-      'sign',
-      'currency',
-    ];
-
-    foreach ($request_keys as $request_key) {
-      if (!$request->request->has($request_key)) {
-        return NULL;
-      }
+    // Validate request.
+    if (!$this->validateRequest($request)) {
+      return NULL;
     }
 
     // Set payment state.
@@ -267,12 +252,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
 
     $payment_state = 'completed';
 
-    // Get order.
+    // Get order by orderId request param.
     $order_id = $request->request->get('orderId');
     $order_storage = $this->entityTypeManager->getStorage('commerce_order');
 
     /** @var \Drupal\commerce_order\Entity\Order $order */
     $order = $order_storage->load($order_id);
+
     if (is_null($order)) {
       return NULL;
     }
@@ -291,11 +277,12 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     );
 
     $request_sign = $request->request->get('sign');
+
     if ($request_sign !== $validation_sign) {
       return NULL;
     }
 
-    // Create payment.
+    // Create payment entity.
     /** @var \Drupal\commerce_payment\Entity\Payment $payment */
     $payment = $this->paymentStorage->create([
       'type' => 'payment_default',
@@ -314,8 +301,40 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     // @link https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%B8-%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B5
     return new XmlResponse(
       '<?xml version="1.0" encoding="UTF-8"?><response><result>0</result></response>',
-      200,
+      200
     );
+  }
+
+  /**
+   * Validate request to heck if it has all necessary params.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Payin-Payout service request.
+   *
+   * @return bool
+   *   Whether request is valid.
+   */
+  private function validateRequest(Request $request) {
+    $request_keys = [
+      'orderId',
+      'agentId',
+      'amount',
+      'paymentId',
+      'paymentStatus',
+      'paymentDate',
+      'outputId',
+      'phone',
+      'sign',
+      'currency',
+    ];
+
+    foreach ($request_keys as $request_key) {
+      if (!$request->request->has($request_key)) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
 }
