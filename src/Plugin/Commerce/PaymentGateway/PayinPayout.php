@@ -3,19 +3,12 @@
 namespace Drupal\commerce_payin_payout\Plugin\Commerce\PaymentGateway;
 
 use Drupal\commerce_payin_payout\Utility\PayinPayoutHelper;
-use Drupal\commerce_payment\PaymentMethodTypeManager;
-use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
 use Drupal\commerce_price\Price;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use GuzzleHttp\ClientInterface;
 use Laminas\Diactoros\Response\XmlResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -84,13 +77,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
    */
   public function defaultConfiguration() {
     return [
-        'api_token' => '',
-        'agent_id' => '',
-        'agent_name' => '',
-        'order_id_prefix' => '',
-        'customer_phone_field_name' => '',
-        'api_logging' => '',
-      ] + parent::defaultConfiguration();
+      'api_token' => '',
+      'agent_id' => '',
+      'agent_name' => '',
+      'order_id_prefix' => '',
+      'customer_phone_field_name' => '',
+      'api_logging' => '',
+    ] + parent::defaultConfiguration();
   }
 
   /**
