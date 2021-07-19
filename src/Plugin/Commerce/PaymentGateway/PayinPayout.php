@@ -5,7 +5,6 @@ namespace Drupal\commerce_payin_payout\Plugin\Commerce\PaymentGateway;
 use Drupal\commerce_payin_payout\Utility\PayinPayoutHelper;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
 use Drupal\commerce_price\Price;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -85,13 +84,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
    */
   public function defaultConfiguration() {
     return [
-        'api_token' => '',
-        'agent_id' => '',
-        'agent_name' => '',
-        'order_id_prefix' => '',
-        'customer_phone_field_name' => '',
-        'api_logging' => '',
-      ] + parent::defaultConfiguration();
+      'api_token' => '',
+      'agent_id' => '',
+      'agent_name' => '',
+      'order_id_prefix' => '',
+      'customer_phone_field_name' => '',
+      'api_logging' => '',
+    ] + parent::defaultConfiguration();
   }
 
   /**
@@ -212,7 +211,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
 
     if ($payment_status === '2') {
       $message = $this->t('Payment #@payment_id failed.', [
-        '@payment_id' => $request->request->get('outputId')
+        '@payment_id' => $request->request->get('outputId'),
       ]);
 
       $this->logger->warning($message);
