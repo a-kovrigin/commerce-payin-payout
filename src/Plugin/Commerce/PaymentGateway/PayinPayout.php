@@ -6,12 +6,12 @@ use Drupal\commerce_payin_payout\Utility\PayinPayoutHelper;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
 use Drupal\commerce_price\Price;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Laminas\Diactoros\Response\XmlResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\field\Entity\FieldConfig;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides the Payin-Payout payment gateway.
@@ -60,6 +60,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
   private $paymentStorage;
 
   /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  private $entityFieldManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -69,6 +76,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     $instance->paymentStorage = $entity_type_manager->getStorage('commerce_payment');
     $instance->payinPayoutHelper = new PayinPayoutHelper();
     $instance->logger = $container->get('logger.factory')->get('commerce_payin_payout');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
     return $instance;
   }
 
@@ -77,13 +85,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
    */
   public function defaultConfiguration() {
     return [
-      'api_token' => '',
-      'agent_id' => '',
-      'agent_name' => '',
-      'order_id_prefix' => '',
-      'customer_phone_field_name' => '',
-      'api_logging' => '',
-    ] + parent::defaultConfiguration();
+        'api_token' => '',
+        'agent_id' => '',
+        'agent_name' => '',
+        'order_id_prefix' => '',
+        'customer_phone_field_name' => '',
+        'api_logging' => '',
+      ] + parent::defaultConfiguration();
   }
 
   /**
@@ -124,9 +132,10 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     ];
 
     $form['customer_phone_field_name'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Customer phone field'),
-      '#description' => $this->t('The machine name of a customer profile field storing phone number value (e.g. "field_customer_phone_number").'),
+      '#options' => $this->getCustomerFieldOptions(),
+      '#description' => $this->t('The customer profile field storing phone number value.'),
       '#default_value' => $this->configuration['customer_phone_field_name'],
       '#required' => TRUE,
     ];
@@ -142,15 +151,26 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
   }
 
   /**
-   * {@inheritdoc}
+   * Get customer profile fields.
+   *
+   * @return array
+   *   The array of customer profile fields.
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $phone_field_name = $form_state->getValue($form['#parents'])['customer_phone_field_name'];
-    $field_storage_config = FieldStorageConfig::loadByName('profile', $phone_field_name);
+  private function getCustomerFieldOptions() {
+    $customer_fields = [];
 
-    if (!$field_storage_config instanceof FieldStorageConfig) {
-      $form_state->setError($form['customer_phone_field_name'], $this->t("The provided customer phone field name doesn't exists for profile entity type."));
+    $bundle_fields = $this->entityFieldManager->getFieldDefinitions('profile', 'customer');
+
+    /** @var \Drupal\field\Entity\FieldConfig $field */
+    foreach ($bundle_fields as $key => $field) {
+      if (!$field instanceof FieldConfig) {
+        continue;
+      }
+
+      $customer_fields[$field->getName()] = $field->label();
     }
+
+    return $customer_fields;
   }
 
   /**
@@ -191,10 +211,12 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     $payment_status = $request->request->get('paymentStatus');
 
     if ($payment_status === '2') {
-      $this->logger->warning(
-        new TranslatableMarkup('Payment #@payment_id failed.',
-          ['@payment_id' => $request->request->get('outputId')])
-      );
+      $message = $this->t('Payment #@payment_id failed.', [
+        '@payment_id' => $request->request->get('outputId')
+      ]);
+
+      $this->logger->warning($message);
+
       return NULL;
     }
 
@@ -247,10 +269,9 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     // Return XML response payment successfully processed.
     // This XML tells Payin-Payout to stop sending requests about the payment.
     // @see https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%B8-%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B5
-    return new XmlResponse(
-      '<?xml version="1.0" encoding="UTF-8"?><response><result>0</result></response>',
-      200
-    );
+    return new Response('<?xml version="1.0" encoding="UTF-8"?><response><result>0</result></response>', 200, [
+      'Content-Type' => 'text/xml',
+    ]);
   }
 
   /**

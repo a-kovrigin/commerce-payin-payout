@@ -5,6 +5,7 @@ namespace Drupal\commerce_payin_payout\PluginForm;
 use Drupal\commerce_payin_payout\Utility\PayinPayoutHelper;
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_payment\Exception\PaymentGatewayException;
 
 /**
  * Provides offsite-redirect form for PayinPayout payment gateway.
@@ -71,8 +72,16 @@ class PayinPayoutForm extends BasePaymentOffsiteForm {
     $amount = $order->getTotalPrice()->getNumber();
     $currency = $this->payinPayoutHelper->formatCurrency($order->getTotalPrice()->getCurrencyCode());
 
+    // Get phone field value.
     $phone_field_name = $plugin_configuration['customer_phone_field_name'];
-    $phone_number = $order->getBillingProfile()->$phone_field_name->value;
+    /** @var \Drupal\profile\Entity\Profile $order_billing_profile */
+    $order_billing_profile = $order->getBillingProfile();
+
+    if (!$order_billing_profile->hasField($phone_field_name)) {
+      throw new PaymentGatewayException('Provided phone number field does not exist for customer profile entity.');
+    }
+
+    $phone_number = $order_billing_profile->get($phone_field_name)->value;
     $phone_number_formatted = $this->payinPayoutHelper->formatPhoneNumber($phone_number);
 
     // Generate payment sign.
