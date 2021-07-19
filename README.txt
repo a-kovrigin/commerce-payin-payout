@@ -36,7 +36,6 @@ https://www.drupal.org/docs/8/extending-drupal-8/installing-modules-composer-dep
 CONFIGURATION
 -------------
 * Create a new Payin-Payout payment gateway.
-  Administration > Commerce > Configuration > Payment gateways > Add payment gateway
   Select payment mode, add API token and other necessary information.
 
 
