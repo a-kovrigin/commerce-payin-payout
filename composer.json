@@ -1,0 +1,28 @@
+{
+    "name": "drupal/commerce_payin_payout",
+    "type": "drupal-module",
+    "description": "Provides payment gateway for Payin-Payout service.",
+    "keywords": [
+        "Drupal",
+        "Drupal Commerce",
+        "Commerce Payment Method",
+        "Payin-Payout"
+    ],
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/commerce_payin_payout",
+    "authors": [
+        {
+            "name": "Alexander Kovrigin (a.kovrigin)",
+            "homepage": "https://www.drupal.org/u/akovrigin",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://drupal.org/project/issues/commerce_payin_payout",
+        "source": "http://cgit.drupalcode.org/commerce_payin_payout"
+    },
+    "require": {
+        "drupal/core": "^8.8 || ^9",
+        "drupal/commerce": "^2.15"
+    }
+}

@@ -27,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
  *   id = "payin_payout",
  *   label = @Translation("Payin-Payout"),
  *   display_label = @Translation("Payin-Payout"),
- *    forms = {
+ *   forms = {
  *     "offsite-payment" = "Drupal\commerce_payin_payout\PluginForm\PayinPayoutForm",
  *   },
  *   payment_method_types = {"credit_card"},
@@ -57,7 +57,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
-  private LoggerChannelInterface $logger;
+  private $logger;
 
   /**
    * The payment storage.
@@ -67,61 +67,16 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
   private $paymentStorage;
 
   /**
-   * Constructs a new PayinPayout object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
-   *   The payment type manager.
-   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   *   The payment method type manager.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time.
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   The http client.
-   * @param \Drupal\Core\Logger\LoggerChannelFactory $logger_factory
-   *   The logger factory.
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    EntityTypeManagerInterface $entity_type_manager,
-    PaymentTypeManager $payment_type_manager,
-    PaymentMethodTypeManager $payment_method_type_manager,
-    TimeInterface $time,
-    ClientInterface $http_client,
-    LoggerChannelFactory $logger_factory
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
-
-    $this->profileStorage = $entity_type_manager->getStorage('profile');
-    $this->paymentStorage = $entity_type_manager->getStorage('commerce_payment');
-    $this->payinPayoutHelper = new PayinPayoutHelper();
-    $this->logger = $logger_factory->get('commerce_payin_payout');
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_payment_type'),
-      $container->get('plugin.manager.commerce_payment_method_type'),
-      $container->get('datetime.time'),
-      $container->get('http_client'),
-      $container->get('logger.factory')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $entity_type_manager = $container->get('entity_type.manager');
+    $instance->profileStorage = $entity_type_manager->getStorage('profile');
+    $instance->paymentStorage = $entity_type_manager->getStorage('commerce_payment');
+    $instance->payinPayoutHelper = new PayinPayoutHelper();
+    $instance->logger = $container->get('logger.factory')->get('commerce_payin_payout');
+    return $instance;
   }
 
   /**
@@ -129,13 +84,13 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
    */
   public function defaultConfiguration() {
     return [
-      'api_token' => '',
-      'agent_id' => '',
-      'agent_name' => '',
-      'order_id_prefix' => '',
-      'customer_phone_field_name' => '',
-      'api_logging' => '',
-    ] + parent::defaultConfiguration();
+        'api_token' => '',
+        'agent_id' => '',
+        'agent_name' => '',
+        'order_id_prefix' => '',
+        'customer_phone_field_name' => '',
+        'api_logging' => '',
+      ] + parent::defaultConfiguration();
   }
 
   /**
@@ -239,7 +194,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     }
 
     // Set payment state.
-    // @link https://github.com/payin-payout/payin-api#%D1%84%D0%BE%D1%80%D0%BC%D0%B0-%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8-%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81%D0%B0-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B0
+    // @see https://github.com/payin-payout/payin-api#%D1%84%D0%BE%D1%80%D0%BC%D0%B0-%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8-%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81%D0%B0-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B0
     $payment_status = $request->request->get('paymentStatus');
 
     if ($payment_status === '2') {
@@ -298,7 +253,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
 
     // Return XML response payment successfully processed.
     // This XML tells Payin-Payout to stop sending requests about the payment.
-    // @link https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%B8-%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B5
+    // @see https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%B8-%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B5
     return new XmlResponse(
       '<?xml version="1.0" encoding="UTF-8"?><response><result>0</result></response>',
       200

@@ -14,12 +14,12 @@ class PayinPayoutForm extends BasePaymentOffsiteForm {
   /**
    * The live API url to process payment.
    */
-  const API_URL_LIVE = 'https://lk.payin-payout.net/api/shop';
+  private const API_URL_LIVE = 'https://lk.payin-payout.net/api/shop';
 
   /**
    * The test API url to process payment.
    */
-  const API_URL_TEST = 'https://dev1.payin-payout.net';
+  private const API_URL_TEST = 'https://dev1.payin-payout.net';
 
   /**
    * The Payin-Payout helper.

@@ -10,13 +10,13 @@ class PayinPayoutHelper {
   /**
    * Format currency code.
    *
-   * @link https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-2
-   *
    * @param string $currency_code
    *   The currency code.
    *
    * @return string
    *   The formatted currency code.
+   *
+   * @see https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-2
    */
   public function formatCurrency(string $currency_code) {
     $currency_formatted = $currency_code;
