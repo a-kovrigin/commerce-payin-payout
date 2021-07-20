@@ -31,18 +31,11 @@ use Symfony\Component\HttpFoundation\Response;
 class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The commerce profile storage.
+   * The entity field manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  private $profileStorage;
-
-  /**
-   * The Payin-Payout helper.
-   *
-   * @var \Drupal\commerce_payin_payout\Utility\PayinPayoutHelper
-   */
-  private $payinPayoutHelper;
+  private $entityFieldManager;
 
   /**
    * The logger.
@@ -52,30 +45,20 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
   private $logger;
 
   /**
-   * The payment storage.
+   * The Payin-Payout helper.
    *
-   * @var \Drupal\commerce_payment\PaymentStorageInterface
+   * @var \Drupal\commerce_payin_payout\Utility\PayinPayoutHelper
    */
-  private $paymentStorage;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  private $entityFieldManager;
+  private $payinPayoutHelper;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $entity_type_manager = $container->get('entity_type.manager');
-    $instance->profileStorage = $entity_type_manager->getStorage('profile');
-    $instance->paymentStorage = $entity_type_manager->getStorage('commerce_payment');
-    $instance->payinPayoutHelper = new PayinPayoutHelper();
-    $instance->logger = $container->get('logger.factory')->get('commerce_payin_payout');
     $instance->entityFieldManager = $container->get('entity_field.manager');
+    $instance->logger = $container->get('logger.factory')->get('commerce_payin_payout');
+    $instance->payinPayoutHelper = new PayinPayoutHelper();
     return $instance;
   }
 
@@ -252,8 +235,9 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     }
 
     // Create payment entity.
+    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     /** @var \Drupal\commerce_payment\Entity\Payment $payment */
-    $payment = $this->paymentStorage->create([
+    $payment = $payment_storage->create([
       'type' => 'payment_default',
       'payment_gateway' => $this->pluginId,
       'remote_id' => $request->request->get('outputId'),
@@ -265,8 +249,8 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     ]);
     $payment->save();
 
-    // Return XML response payment successfully processed.
-    // This XML tells Payin-Payout to stop sending requests about the payment.
+    // Return payment successfully processed XML response.
+    // This tells Payin-Payout to stop sending requests about the payment.
     // @see https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%B8-%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B5
     return new Response('<?xml version="1.0" encoding="UTF-8"?><response><result>0</result></response>', 200, [
       'Content-Type' => 'text/xml',
@@ -274,7 +258,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
   }
 
   /**
-   * Validate request to heck if it has all necessary params.
+   * Validate request to check if it has all necessary params.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The Payin-Payout service request.
