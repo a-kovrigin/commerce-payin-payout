@@ -144,7 +144,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
     $bundle_fields = $this->entityFieldManager->getFieldDefinitions('profile', 'customer');
 
     /** @var \Drupal\field\Entity\FieldConfig $field */
-    foreach ($bundle_fields as $key => $field) {
+    foreach ($bundle_fields as $field) {
       if (!$field instanceof FieldConfig) {
         continue;
       }
@@ -202,8 +202,6 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
       return NULL;
     }
 
-    $payment_state = 'completed';
-
     // Get order by orderId request param.
     $order_id = $request->request->get('orderId');
     $order_storage = $this->entityTypeManager->getStorage('commerce_order');
@@ -244,7 +242,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
       'remote_state' => $request->request->get('paymentStatus'),
       'order_id' => $order_id,
       'amount' => new Price($request->request->get('amount'), $this->payinPayoutHelper->formatCurrency($request->request->get('currency'))),
-      'state' => $payment_state,
+      'state' => 'completed',
       'payment_gateway_mode' => $this->getMode(),
     ]);
     $payment->save();

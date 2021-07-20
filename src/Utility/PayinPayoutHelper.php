@@ -19,19 +19,16 @@ class PayinPayoutHelper {
    * @see https://github.com/payin-payout/payin-api#%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-2
    */
   public function formatCurrency(string $currency_code) {
-    $currency_formatted = $currency_code;
+    $currencies_map = [
+      'RUB' => 'RUR',
+      'RUR' => 'RUB',
+    ];
 
-    switch ($currency_code) {
-      case 'RUB':
-        $currency_formatted = 'RUR';
-        break;
-
-      case 'RUR':
-        $currency_formatted = 'RUB';
-        break;
+    if (array_key_exists($currency_code, $currencies_map)) {
+      return $currencies_map[$currency_code];
     }
 
-    return $currency_formatted;
+    return $currency_code;
   }
 
   /**

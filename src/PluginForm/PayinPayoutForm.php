@@ -30,7 +30,7 @@ class PayinPayoutForm extends BasePaymentOffsiteForm {
   private $payinPayoutHelper;
 
   /**
-   * {@inheritdoc}
+   * Constructs a new PayinPayoutForm object.
    */
   public function __construct() {
     $this->payinPayoutHelper = new PayinPayoutHelper();
@@ -51,6 +51,9 @@ class PayinPayoutForm extends BasePaymentOffsiteForm {
       case 'live':
         $api_url = self::API_URL_LIVE;
         break;
+
+      default:
+        throw new PaymentGatewayException('Provided payment mode cannot be handled.');
     }
 
     // Get plugin configuration parameters.
