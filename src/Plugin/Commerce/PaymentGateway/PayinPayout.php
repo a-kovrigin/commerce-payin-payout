@@ -228,7 +228,7 @@ class PayinPayout extends OffsitePaymentGatewayBase implements ContainerFactoryP
 
     $request_sign = $request->request->get('sign');
 
-    if ($request_sign !== $validation_sign) {
+    if (!hash_equals($validation_sign, $request_sign)) {
       return NULL;
     }
 
