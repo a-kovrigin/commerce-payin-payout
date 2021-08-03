@@ -45,7 +45,9 @@ class PayinPayoutHelper {
   }
 
   /**
-   * Generate sign for payments validation.
+   * Generate sign for payment validation.
+   *
+   * Using md5() for hashing signs is a requirement of the payment gateway.
    *
    * @param array $data
    *   The array of data to implode.
@@ -54,6 +56,8 @@ class PayinPayoutHelper {
    *
    * @return string
    *   The payment sign.
+   *
+   * @see https://github.com/payin-payout/payin-api/blob/master/Token.md#%D0%BF%D1%80%D0%B8-%D0%BE%D0%BF%D0%BB%D0%B0%D1%82%D0%B5-%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%B6%D0%B0-%D1%82%D0%BE%D0%BA%D0%B5%D0%BD%D0%BE%D0%BC
    */
   public function generateSign(array $data, string $api_token) {
     $data_string = implode('#', $data);
